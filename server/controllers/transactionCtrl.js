@@ -9,32 +9,40 @@ export const handleTransation = async (req, res) => {
     return
   }
   try {
-    const { transactionSender, transactionReceiver, transactionAmount } =
-      req.body
-    const transaction = {
-      _id: new mongoose.Types.ObjectId(),
-      transactionSender,
-      transactionReceiver,
-      transactionAmount,
-    }
+    const { fromUser, toUser, amount } = req.body
 
-    const sender = await User.find({ username: transactionSender })
-    console.log('sender: ', sender)
-    const receiver = await User.find({ username: transactionReceiver })
+    // const sender = await User.find({username: fromUser})
+    const sender = await User.where('username').equals(fromUser)
+    console.log('sender: ', sender[0].transactions)
+    const receiver = await User.where('username').equals(toUser)
     console.log('receiver: ', receiver)
 
+    const transaction = {
+      _id: new mongoose.Types.ObjectId(),
+      fromUser: sender[0]._id,
+      toUser: receiver[0]._id,
+      amount,
+    }
+    // perform transation from sender to receiver
+    sender[0].accountBalance -= Number(amount)
+    receiver[0].accountBalance += Number(amount)
 
+    // add new transaction to Sender's transactions history
+    sender[0].transactions.push(transaction)
 
+    // save the transaction operation
+    await sender[0].save()
+    await receiver[0].save()
     const transactionCreated = await Transaction.create(transaction)
     console.log('Transaction Created::: ', transactionCreated)
 
-    // const transactionInfoJson = {
-    //   success: true,
-    //   data: transactionCreated,
-    // }
+    const transactionInfoJson = {
+      success: true,
+      data: transactionCreated,
+    }
 
-    // res.status(200).json(transactionInfoJson)
-    // mongoose.disconnect()
+    res.status(200).json(transactionInfoJson)
+    mongoose.disconnect()
   } catch (err) {
     const userErrorJson = {
       success: false,
