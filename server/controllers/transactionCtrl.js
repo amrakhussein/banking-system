@@ -17,29 +17,20 @@ export const handleTransation = async (req, res) => {
     const receiver = await User.where('username').equals(toUser)
     console.log('receiver: ', receiver)
 
-    const transaction = {
-      _id: new mongoose.Types.ObjectId(),
-      fromUser: sender[0]._id,
-      toUser: receiver[0]._id,
+    const transactionData = {
+      sender,
+      receiver,
       amount,
+      transaction: {
+        _id: new mongoose.Types.ObjectId(),
+        fromUser: sender[0]._id,
+        toUser: receiver[0]._id,
+        amount,
+      },
     }
-    // perform transation from sender to receiver
-    sender[0].accountBalance -= Number(amount)
-    receiver[0].accountBalance += Number(amount)
 
-    // add new transaction to Sender's transactions history
-    sender[0].transactions.push(transaction)
-
-    // save the transaction operation
-    await sender[0].save()
-    await receiver[0].save()
-    const transactionCreated = await Transaction.create(transaction)
-    console.log('Transaction Created::: ', transactionCreated)
-
-    const transactionInfoJson = {
-      success: true,
-      data: transactionCreated,
-    }
+    const transactionInfoJson = await createTransaction(transactionData)
+    console.log('transactionInfoJson: ', transactionInfoJson)
 
     res.status(200).json(transactionInfoJson)
     mongoose.disconnect()
@@ -50,4 +41,26 @@ export const handleTransation = async (req, res) => {
     }
     return res.status(500).json(userErrorJson)
   }
+}
+
+const createTransaction = async (transactionData) => {
+  const { sender, receiver, amount, transaction } = transactionData
+  // perform transation from sender to receiver
+  sender[0].accountBalance -= Number(amount)
+  receiver[0].accountBalance += Number(amount)
+
+  // add new transaction to Sender's transactions history
+  sender[0].transactions.push(transaction)
+
+  // save the transaction operation
+  await sender[0].save()
+  await receiver[0].save()
+  const transactionCreated = await Transaction.create(transaction)
+  console.log('Transaction Created::: ', transactionCreated)
+
+  const transactionInfoJson = {
+    success: true,
+    data: transactionCreated,
+  }
+  return transactionInfoJson
 }
