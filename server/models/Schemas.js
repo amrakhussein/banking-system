@@ -31,6 +31,7 @@ const userSchema = new Schema(
     ],
   }
   // { collection: 'user-schema' }
+  
 )
 
 const transactionSchema = new Schema(
@@ -43,10 +44,12 @@ const transactionSchema = new Schema(
     fromUser: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'UserModal',
+      required: true
     },
     toUser: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'UserModal',
+      required: true
     },
     amount: {
       type: Number,

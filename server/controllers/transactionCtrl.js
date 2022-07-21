@@ -33,7 +33,7 @@ export const handleTransation = async (req, res) => {
     console.log('transactionInfoJson: ', transactionInfoJson)
 
     res.status(200).json(transactionInfoJson)
-    mongoose.disconnect()
+    // mongoose.disconnect()
   } catch (err) {
     const userErrorJson = {
       success: false,
